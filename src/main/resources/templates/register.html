@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!--移动端的预览设置，用于适配移动端-->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/Semantic-UI-CSS-master/semantic.min.css}">
+    <link rel="stylesheet" th:href="@{/css/myblog.css}">
+    <title>注册页面</title>
+
+
+</head>
+<body>
+<!--导航-->
+<div th:replace="~{index::indexNav}"></div>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<div class="ui middle aligned center aligned grid m-container-small m-padded-tb-big">
+    <div class="column">
+        <h2 class="ui teal image header">
+            <div class="content header">
+                博客账号注册
+            </div>
+        </h2>
+        <h3 class="ui red header" id="message" th:text="${message}"></h3>
+        <form id="registerForm" class="ui large form" method="post" action="/blog/register" enctype="multipart/form-data">
+            <div class="ui stacked segment">
+                <div class="field">
+                    <div class="ui left icon input">
+                        <i class="user icon"></i>
+                        <input id="username" type="text" name="name" placeholder="账号">
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="ui left icon input">
+                        <i class="lock icon"></i>
+                        <input type="password" name="password" placeholder="密码">
+                    </div>
+                </div>
+                <div class="field">
+                     <div class="ui left icon input">
+                        <i class="camera icon"></i>
+                        <input type="file" name="icon">
+                    </div>
+                </div>
+                <button class="ui fluid large teal submit button" id="subBtn" type="submit">注册</button>
+                <br>
+                <a th:href="@{/blog/index}">去登录</a>
+            </div>
+
+            <div class="ui error message"></div>
+
+        </form>
+
+
+    </div>
+</div>
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!--底部footer-->
+<!--~{index::footer}-->
+<!--模板名::片段名-->
+<!--th:fragment="footer"-->
+<div th:replace="~{index::footer}"></div>
+<!--登录-->
+<div th:replace="~{index::login}"></div>
+
+<script th:src="@{/js/jquery-3.5.1.min.js}"></script>
+<script th:src="@{/Semantic-UI-CSS-master/semantic.min.js}"></script>
+<!--登录弹出框的js-->
+<script th:src="@{/myjs/login_js.js}"></script>
+<script type="text/javascript">
+
+
+    // 导航菜单中
+    $("#b1").click(function () {
+        $(".m-item").toggleClass("m-mobile-hide");
+    });
+
+    $('.ui.dropdown').dropdown({
+        on: 'hover'
+    });
+
+    $(function () {
+       $('#username').blur(function () {
+           var name = $('#username').val();
+           $.post(
+               '/blog/verifyName/' + name,
+               {},
+               function (data) {
+                   if(!data['data']){
+                       $('#message').text("账号已存在");
+                       $('#subBtn').attr("disabled","true");
+                   }else{
+                       $('#message').text("");
+                       $('#subBtn').removeAttr("disabled");
+                   }
+               },
+               'json'
+           );
+       });
+    });
+
+</script>
+
+</body>
+</html>

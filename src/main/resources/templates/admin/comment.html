@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!--移动端的预览设置，用于适配移动端-->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+    <link rel="stylesheet" href="/css/myblog.css">
+    <title>后台管理</title>
+
+
+</head>
+<body id="body">
+<!--导航-->
+<div th:replace="~{admin/manage::adminNav}"></div>
+
+
+<!--中间内容-->
+<div class="m-container-small m-padded-tb-big">
+    <div class="ui container">
+        <div action="#" class="ui form segment inverted" method="post">
+            <div class="fields inline">
+                <div class="field">
+                    <input type="text" name="blogName" id="blogTitle" th:value="${blogTitle}" placeholder="所属博客标题">
+                </div>
+
+
+
+                <div class="ui left labeled action input field">
+                    <div class="ui selection dropdown fluid upward" style="width: 116px">
+                        <input type="hidden" name="state" id="commentState" th:value="${commentState==null?2:commentState}">
+                        <i class="ui dropdown icon"></i>
+                        <div class="default text">评论状态</div>
+                        <div class="menu">
+                            <div class="item" th:data-value="${-1}"
+                                 th:text="${'已删除'}"></div>
+                            <div class="item" th:data-value="${0}"
+                                 th:text="${'审核未通过'}"></div>
+                            <div class="item" th:data-value="${1}"
+                                 th:text="${'审核已通过'}"></div>
+                            <div class="item" th:data-value="${2}"
+                                 th:text="${'全选'}"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field right aligned">
+                    <button class="ui small teal basic button" onclick="search()"><i class="search icon"></i>搜索
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="table-container">
+            <table th:fragment="table_refresh" th:id="id_table_refresh" class="ui table inverted celled center aligned">
+                <thread>
+                    <tr>
+                        <th></th>
+                        <th>评论用户名称</th>
+                        <th>所属博客</th>
+                        <th>评论内容</th>
+                        <th>评论时间</th>
+                        <th>评论状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thread>
+                <tbody>
+                    <input type="hidden" name="maxPage" th:value="${pageInfo.getPages()}">
+                    <tr th:each="comment,iter:${pageInfo.getList()}">
+                        <td th:text="${iter.index+1}">1</td>
+                        <td th:text="${comment.getCommentPersonName()}">追梦</td>
+                        <td th:text="${comment.getBlogTitle()}">【一年总结】记我的大一生活</td>
+                        <td th:if="${comment.getContent().length()>9}" th:text="${comment.getContent().substring(0,8)+'...'}">厉害！</td>
+                        <td th:if="${comment.getContent().length()<=9}" th:text="${comment.getContent()}">厉害！</td>
+                        <td th:text="${#dates.format(comment.getCreateTime(),'yyyy-MM-dd HH:mm:ss')}">2020-7-04 15:12</td>
+                        <td th:if="${comment.getCommentState() == 0}">审核未通过</td>
+                        <td th:if="${comment.getCommentState() == 1}">审核已通过</td>
+                        <td th:if="${comment.getCommentState() == -1}">已删除</td>
+                        <td>
+                            <a class="ui button  teal basic mini " th:attr="data-id=${comment.getId()}"
+                               onclick="toDetailPage(this)">详情</a>
+                            <a th:if="${comment.getCommentState() != -1}" class="ui button  red basic mini " th:attr="data-id=${comment.getId()}"
+                               onclick="deleteComment(this)">删除</a>
+                        </td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="7">
+                            <div class="ui pagination menu mini">
+                                <a class="ui item " onclick="first()">首页</a>
+                                <a  class="ui item " onclick="pre()">上一页</a>
+                                <a  class="ui item " onclick="next()">下一页</a>
+                                <a class="ui item " onclick="end()">尾页</a>
+                            </div>
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!--底部footer-->
+<div th:replace="~{index::footer}"></div>
+
+
+<script src="/js/jquery-3.5.1.min.js"></script>
+<script src="/Semantic-UI-CSS-master/semantic.min.js"></script>
+<script type="text/javascript">
+
+    $("#b1").click(function () {
+        $(".m-item").toggleClass("m-mobile-hide");
+    });
+
+    $('.ui.dropdown').dropdown({
+        on: 'hover'
+    })
+
+
+    // 页面默认数据
+    var pageNum = [[${pageNum}]];
+
+    // 搜索
+    function search() {
+        // 搜索重置当前页
+        pageNum = 1;
+        loadData();
+    }
+
+
+    //首页
+    function first() {
+        if (pageNum == 1) {
+            return;
+        }
+        pageNum = 1;
+        loadData();
+    }
+
+    //下一页
+    function next() {
+        if (pageNum >= $("[name='maxPage']").val()) {
+            return;
+        }
+        pageNum++;
+        loadData();
+    }
+
+    //上一页
+    function pre() {
+        if (pageNum <= 1) {
+            pageNum = 1;
+            return;
+        }
+        pageNum--;
+        loadData();
+    }
+
+    //尾页
+    function end() {
+        pageNum = $("[name='maxPage']").val();
+        loadData();
+    }
+
+    function loadData() {
+        var state = $("[name='state']").val();
+        if(state == 2){
+            $.ajax({
+                url: "/admin/comment/doPage",
+                // type 专栏 分类
+                data: {"pageNum": pageNum, "blogTitle": $("[name='blogName']").val()},
+                type: "get",
+                success: function (result) {
+
+                    // 只刷新博客展示部分，其他地方不变
+                    // ajax返回数据的时候，页面模板只需要返回对应数据片段就可以
+                    $("#table-container").html(result);
+                }
+            });
+            return ;
+        }
+        $.ajax({
+            url: "/admin/comment/doPage",
+            // type 专栏 分类
+            data: {"pageNum": pageNum, "blogTitle": $("[name='blogName']").val(), "commentState":state},
+            type: "get",
+            success: function (result) {
+
+                // 只刷新博客展示部分，其他地方不变
+                // ajax返回数据的时候，页面模板只需要返回对应数据片段就可以
+                $("#table-container").html(result);
+            }
+        });
+    }
+
+
+    //删除
+    function deleteComment(button) {
+        var state = $("[name='state']").val();
+        if(state == 2){
+            $.ajax({
+                url: "/admin/comment",
+                data: {"id": $(button).attr("data-id"),"pageNum":pageNum,"blogTitle": $("[name='blogName']").val()},
+                type: "delete",
+
+                success: function (result) {
+                    $("#table-container").html(result);
+                }
+            });
+            return ;
+        }
+        $.ajax({
+            url: "/admin/comment",
+            data: {"id": $(button).attr("data-id"),"pageNum":pageNum,"blogTitle": $("[name='blogName']").val(), "commentState":state},
+            type: "delete",
+
+            success: function (result) {
+                $("#table-container").html(result);
+            }
+        });
+    }
+
+
+    //详情
+    function toDetailPage(button) {
+        // th:href="'/admin/comment/toComment-detail/'+${comment.getId()+'/'+pageInfo.getPageNum()}"
+        //
+        // $.ajax({
+        //     url: "/admin/comment/toComment-detail",
+        //     data: {"id": $(button).attr("data-id"),"pageNum":pageNum,"blogTitle": $("[name='blogName']").val(), "commentState":$("[name='state']").val()},
+        //     type: "get",
+        //     success: function (result) {
+        //         window.location.href= "";
+                var blogTitle = $('#blogTitle').val();
+                if(blogTitle == "" || blogTitle == null){
+                    blogTitle = "@--!!@@";
+                }
+                window.location.href="/admin/comment/toComment-detail/"+$(button).attr('data-id')+"/"
+                +pageNum + "/" + blogTitle + "/" + $('#commentState').val();
+                // window.open("/admin/comment/toComment-detail");
+                // window.location.href="admin/comment_detail.html";
+                // window.location.href = "/admin/comment/toComment-detail/"+$(button).attr('data-id')+"/"+pageNum+"/"+$('[name=\'blogName\']').val()+"/"+$('[name=\'state\']').val();
+        //     }
+        // })
+    }
+</script>
+</body>
+</html>

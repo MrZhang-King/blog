@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!--移动端的预览设置，用于适配移动端-->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+    <link rel="stylesheet" th:href="@{/css/myblog.css}">
+    <title>标签</title>
+
+
+</head>
+<body>
+<!--导航-->
+<div th:replace="~{index::indexNav}"></div>
+
+<!--中间内容-->
+<div class="m-container-small m-padded-tb-big m-opacity-mini">
+    <div class="ui container">
+        <!--头部-->
+        <div class="ui segment top attached">
+            <div class="ui middle aligned grid two column">
+                <div class="column">
+                    <h3 class="ui header teal">标签</h3>
+                </div>
+                <div class="column right aligned">
+                    共<h2 class="ui orange header m-inline-block mth" th:text="${tagList.size()}">
+                    &nbsp;14&nbsp; </h2>个
+                </div>
+            </div>
+        </div>
+        <div class="ui bottom attached segment">
+            <a th:each="tag,iter:${tagList}" th:href="@{'/blog/tag/toTag/'+${tag.getId()}}">
+                <div class="ui labeled button m-margin-tb-tiny" >
+                    <div class="ui basic  button" th:text="${tag.getTagName()}"
+                         th:classappend="${tag.getId() == style}? 'teal':''">一年总结
+                    </div>
+                    <div class="ui basic left pointing label" th:text="${tag.getBlogCount()}"
+                         th:classappend="${tag.getId() == style}? 'teal':''">12
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <div id="table-container"  th:fragment="table_refresh">
+            <div class="ui teal segment ">
+                <input type="hidden" name="maxPage" th:value="${blogPageInfo.getPages()}">
+                <!--列表-->
+                <div class="ui attached segment ">
+                    <div th:if="${blogPageInfo.getList().size()==0}"><h2>没有更多的博客啦！不过未来说不定会有哦！QAQ</h2></div>
+                    <div class="ui padded segment vertical m-padded-b-small m-mobile-clear" th:each="blog,iter:${blogPageInfo.getList()}">
+                        <div class="ui grid mobile reversed stackable">
+                            <div class="ui ten wide column">
+                                <a th:href="@{'/blog/blog/toBlog'+'/'+${blog.getId()}}" target="_blank">
+                                    <h3 class="ui header" th:text="${blog.getTitle()}"></h3>
+                                </a>
+
+                                <p class="m-text-thin m-text-lined m-text-spaced" th:text="${blog.getBlogAbstract()}">
+                                </p>
+                                <div class="ui grid">
+                                    <div class="seven wide column">
+                                        <div class="ui list horizontal link mini ">
+                                            <div class="item">
+<!--                                                th:src="@{/images/userIcon/{icon}(icon=${blog.getUserObj().getIcon()})}"-->
+                                                <img th:src="@{'http://123.56.136.47:8090/showImage/'+ ${blog.getUserObj().getIcon()}}" class="ui avatar image">
+                                                <div class="content"><a th:href="@{/blog/toAboutMe}" class="header " th:text="${blog.getUserObj().username()}">渡一</a></div>
+                                            </div>
+                                            <div class="item">
+                                                <i class="calendar icon"></i><span
+                                                    th:text="${#dates.format(blog.getPublishTime(),'yyyy-MM-dd HH:mm:ss')}">2020-7-04</span>
+                                            </div>
+                                            <div class="item">
+                                                <i class="eye icon"></i><span th:text="${blog.getPageViewCount()}">3012</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="nine wide column right aligned ">
+
+                                        123123123
+                                        <!--                                    th:href="@{'/page_tags?tagId='+${tag1.getId()}}"-->
+                                        <!--                                    th:text="${tag1.getName()}"-->
+                                        <a class="ui label teal basic m-padded-tiny"
+                                           th:each="tag1,iter:${blog.getTagObj()}"
+                                           th:href="@{'/blog/tag/toTag/'+${tag1.getId()}}"
+                                           th:text="${tag1.getTagName()}"
+                                        >一年总结</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ui six wide column">
+                                <a th:href="@{'/blog/blog/toBlog/'+${blog.getId()}}" target="_blank">
+                                    <img th:src="@{'http://123.56.136.47:8090/showBlogImage/'+ ${blog.getBlogImg()}}" alt="" class="ui round image">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!--底部-->
+        <div class="ui bottom attached segment">
+            <div class="ui middle aligned grid four column">
+                <div class="column">
+                    <a class="ui button basic mini teal" onclick="first()">首页</a>
+                </div>
+                <div class="column">
+                    <a class="ui button basic mini teal" onclick="pre()">上一页</a>
+                </div>
+                <div class="column">
+                    <a class="ui button basic mini teal" onclick="next()">下一页</a>
+                </div>
+                <div class="column">
+                    <a class="ui button basic mini teal" onclick="end()">尾页</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+<br>
+<!--底部footer-->
+<div th:replace="~{index::footer}"></div>
+<!--登录-->
+<div th:replace="~{index::login}"></div>
+
+
+<script th:src="@{/js/jquery-3.5.1.min.js}"></script>
+<script th:src="@{/Semantic-UI-CSS-master/semantic.min.js}"></script>
+<!--登录弹出框的js-->
+<script th:src="@{/myjs/login_js.js}"></script>
+<script type="text/javascript">
+    // 页面默认数据
+    var pageNum = 1;
+
+    function first() {
+        if (pageNum == 1) {
+            return;
+        }
+        pageNum = 1;
+        loadData();
+
+    }
+
+    function next() {
+        if (pageNum >= $("[name='maxPage']").val()) {
+            return;
+        }
+        pageNum++;
+        loadData();
+    }
+
+    function pre() {
+        if (pageNum <= 1) {
+            pageNum = 1;
+            return;
+        }
+        pageNum--;
+        loadData();
+    }
+
+    function end() {
+        if(pageNum == $("[name='maxPage']").val()){
+            return;
+        }
+        pageNum = $("[name='maxPage']").val();
+        loadData();
+    }
+
+    function loadData() {
+        $.ajax({
+            url: "/blog/tag/doPage/"+pageNum+"/"+[[${style}]] ,
+            // type 专栏 分类
+            data: {},
+            type: "get",
+            success: function (result) {
+
+                // 只刷新博客展示部分，其他地方不变
+                // ajax返回数据的时候，页面模板只需要返回对应数据片段就可以
+                $("#table-container").html(result);
+            }
+        })
+    }
+    // $('.menu.toggle').click(function (){
+    //     $('.m-item').toggleClass('m-mobile-hide');
+    // });
+    //不知道为什么达不到预期的效果
+
+    $('#payButton').popup({
+        popup: $('.popup.payQR'),
+        on: 'click',
+        position: 'bottom center'
+    })
+
+    $(function() {
+        $("#b1").click(function () {
+            $(".m-item").toggleClass("m-mobile-hide");
+        });
+
+        $('.ui.dropdown').dropdown({
+            on: 'hover'
+        });
+    });
+
+</script>
+</body>
+</html>

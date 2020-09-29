@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!--移动端的预览设置，用于适配移动端-->
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="stylesheet" href="/Semantic-UI-CSS-master/semantic.min.css">
+    <link rel="stylesheet" href="/css/myblog.css">
+    <title>后台管理</title>
+
+
+</head>
+<body>
+<!--导航-->
+<div th:replace="~{admin/manage::adminNav}"></div>
+
+<!--二级导航-->
+<div class="ui menu attached inverted ">
+    <div class="ui container">
+        <a th:href="@{'/admin/toComment/'+${pageNum}+'/'+${blogTitle}+'/'+${commentState}}" class="item">列表</a>
+    </div>
+</div>
+<!--中间内容-->
+<div class="m-container-small m-padded-tb-big">
+    <div class="ui container">
+        <br>
+        <br>
+        <br>
+
+        <div id="table-container">
+            <table th:fragment="table_refresh" th:id="id_table_refresh" class="ui table inverted celled center aligned">
+                <thread>
+                    <tr style="line-height: 30px">
+                        <th>评论用户名称</th>
+                        <th>评论时间</th>
+                        <th>审核通过后的发布时间</th>
+                        <th>评论状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thread>
+                <tbody>
+                <tr style="line-height: 40px">
+                    <td th:text="${comment.getCommentPersonName()}">追梦</td>
+                    <td th:text="${#dates.format(comment.getCreateTime(),'yyyy-MM-dd HH:mm:ss')}">2020-7-04 15:12</td>
+                    <td th:text="${#dates.format(comment.getPublishTime(),'yyyy-MM-dd HH:mm:ss')}">2020-7-04 15:12</td>
+                    <td th:if="${comment.getCommentState() == 0}">审核未通过</td>
+                    <td th:if="${comment.getCommentState() == 1}">审核已通过</td>
+                    <td th:if="${comment.getCommentState() == -1}">已删除</td>
+                    <td>
+                        <a th:if="${comment.getCommentState() != -1}" class="ui button red basic mini " th:attr="data-id=${comment.getId()}"
+                           onclick="deleteComment(this)">删除</a>
+                        <a th:if="${comment.getCommentState() == -1}" class="ui button teal basic mini " th:attr="data-id=${comment.getId()}"
+                           onclick="rollBackDelete(this)">取消删除</a>
+                        <a th:if="${comment.getCommentState() == 0}" class="ui button teal basic mini " th:attr="data-id=${comment.getId()}"
+                           onclick="againAudit(this)">重新审核</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <form action="/admin/sort/edit" class="ui form segment inverted" method="post">
+            <div class="fields inline">
+                <div class="field">
+                    所属的博客标题
+                </div>
+
+            </div>
+            <div class="field required" style="background-color: #ffffff;color: #0a001f;line-height: 40px" th:text="${comment.getBlogTitle()}">
+
+            </div>
+
+            <div class="fields inline">
+                <div class="field">
+                    评论内容
+                </div>
+
+            </div>
+            <div class="field required" style="background-color: #ffffff;color: #0a001f;line-height: 40px" th:text="${comment.getContent()}">
+
+            </div>
+        </form>
+
+
+
+
+    </div>
+</div>
+<br>
+<br>
+<br>
+<!--底部footer-->
+<div th:replace="~{index::footer}"></div>
+
+
+<script src="/js/jquery-3.5.1.min.js"></script>
+<script src="/Semantic-UI-CSS-master/semantic.min.js"></script>
+<script type="text/javascript">
+
+
+    $("#b1").click(function () {
+        $(".m-item").toggleClass("m-mobile-hide");
+    });
+
+    $('.ui.dropdown').dropdown({
+        on: 'hover'
+    });
+
+    //删除评论
+    function deleteComment(button) {
+        $.ajax({
+            url: "/admin/comment/delete",
+            data: {"id": $(button).attr("data-id")},
+            type: "post",
+
+            success: function (result) {
+                $("#table-container").html(result);
+            }
+        });
+    }
+
+    //取消删除
+    function rollBackDelete(button) {
+        $.ajax({
+            url: "/admin/comment/rollBackDelete",
+            data: {"id": $(button).attr("data-id")},
+            type: "post",
+
+            success: function (result) {
+                $("#table-container").html(result);
+            }
+        });
+    }
+
+    //重新审核
+    function againAudit(button) {
+        $.ajax({
+            url: "/admin/comment/againAudit",
+            data: {"id": $(button).attr("data-id")},
+            type: "post",
+
+            success: function (result) {
+                $("#table-container").html(result);
+            }
+        });
+    }
+
+
+</script>
+</body>
+</html>
